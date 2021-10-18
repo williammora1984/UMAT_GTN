@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsut.a CMakeFiles/sut.dir/tensor_ope_module.for.o
+/usr/bin/ranlib libsut.a

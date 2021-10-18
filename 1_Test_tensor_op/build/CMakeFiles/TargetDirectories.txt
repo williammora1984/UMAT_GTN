@@ -1,0 +1,5 @@
+/home/william/Code_Sem_IV/PPP_II/Code_PPP/1_Test_tensor_op/build/CMakeFiles/rebuild_cache.dir
+/home/william/Code_Sem_IV/PPP_II/Code_PPP/1_Test_tensor_op/build/CMakeFiles/edit_cache.dir
+/home/william/Code_Sem_IV/PPP_II/Code_PPP/1_Test_tensor_op/build/CMakeFiles/test.dir
+/home/william/Code_Sem_IV/PPP_II/Code_PPP/1_Test_tensor_op/build/CMakeFiles/sut.dir
+/home/william/Code_Sem_IV/PPP_II/Code_PPP/1_Test_tensor_op/build/CMakeFiles/my_test_tensor_op1.dir
