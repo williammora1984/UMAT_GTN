@@ -1,0 +1,69 @@
+*HEADING
+Test uni-axial tensile on a plane strain 8 node parabolic element for an UMAT based on the GTN damage model
+SI units (kg, m, s, N)
+1-axis horizontal, 2-axis vertical, 3-axis out of plane
+: MEMBRANE LOADING  [CPS4]
+*PREPRINT,ECHO=YES,HISTORY=NO,MODEL=NO
+*NODE
+ 1, 0.0,   0.0
+ 2, 0.004, 0.0
+ 3, 0.004, 0.004
+ 4, 0.0,   0.004
+*ELEMENT,TYPE=CPS4, ELSET=EALL
+ 1, 1,2,3,4
+*SOLID SECTION,MATERIAL=A1, ELSET=EALL
+ 1.0, 
+*MATERIAL,NAME=A1
+*ELASTIC,TYPE=ISOTROPIC
+ 30.0E6,0.3
+ **Number of internal state variables for the subroutine
+*Depvar
+21,
+**Input parameters for the subrutine
+**User Material, constants=13
+**210.0e3,  0.33, 200.0, 50.0, 100.0,1.5, 1.0, 1.5, 0.004, 0.1. 0.3, 0.2025, 0.1 
+** STEP: Tension
+** 
+*Step, name=Tension, nlgeom=NO, inc=20
+*Static, direct
+0.1, 1., 
+**
+*BOUNDARY
+ 1,1,2,0.0
+ 2,1,2,0.0
+ 3,2,2,1.0
+ 4,2,2,1.0
+ 3,1,1,0
+ 4,1,1,0
+*EL FILE
+ S,COORD,
+ E,
+ LOADS,
+*OUTPUT,FIELD
+*ELEMENT OUTPUT
+S,COORD,
+E,
+LOADS,
+*ENERGY FILE
+*OUTPUT,HISTORY,FREQUENCY=1
+*ENERGY OUTPUT,VARIABLE=PRESELECT
+*NODE FILE
+ U,COORD
+**
+**------------------------------------------------
+**This is the information that available in odb_field_output which can be used to 
+**plot in the postprocessing
+*OUTPUT,FIELD
+*NODE OUTPUT
+RF, U
+** Expression to generate the graph combine("_U:U2 PI: PART-1-1 N: 4","_RF:RF2 PI: PART-1-1 N: 4")
+*ELEMENT OUTPUT
+S, U
+**---------------------------------------------
+*NODE PRINT
+ U,COORD
+*EL PRINT
+ S,COORD,
+ E,
+ LOADS,
+*END STEP

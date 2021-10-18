@@ -1,4 +1,0 @@
-# The fortran modules provided by this target.
-provides
- loader.mod
- wraptest_tensor_mod.mod

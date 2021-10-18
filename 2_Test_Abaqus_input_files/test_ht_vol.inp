@@ -1,0 +1,73 @@
+*HEADING
+ Test Hydrostatic tension on a 8 node brick element for an UMAT based on the GTN damage model
+ SI units (kg, m, s, N)
+1-axis horizontal, 2-axis vertical, 3-axis elevation
+** *PREPRINT,ECHO=YES,HISTORY=NO,MODEL=NO
+*NODE, NSET=QA_TEST_ALLNODES
+101, 0.0,   0.0,   0.0
+102, 0.0040 ,0.0,   0.0
+103, 0.004 ,0.004, 0.0
+104, 0.0,   0.004, 0.0
+105, 0.0,   0.0,   0.004
+106, 0.004, 0.0,   0.004
+107, 0.004, 0.004, 0.004 
+108, 0.0,   0.004, 0.004
+*NSET,NSET=BOTTOM
+101,102,103,104
+*NSET,NSET=FRONT
+102,103,106,107
+*NSET,NSET=BACK
+101,104,105,108
+*NSET,NSET=LEFTSIDE
+101,102,105,106
+*NSET,NSET=RIGHTSIDE
+103,104,107,108
+*NSET,NSET=TOP
+105,106,107,108
+*NSET, NSET=NOUT
+107, 
+*ELEMENT,TYPE=C3D8R, ELSET=CUBETEST
+101,101,102,103,104,105,106,107,108
+*SOLID SECTION,ELSET=CUBETEST,MATERIAL=MATTEST
+ ** The orifinal value for the secction was 1.0, but I changed since evidently this has a different value 1.6E-5,
+ 1.6E-5, 
+*MATERIAL,NAME=MATTEST
+*DENSITY
+1., 
+*ELASTIC
+210.,0.3
+*Depvar
+21
+*User Material, constants=13
+210.0e3,  0.33, 200.0, 50.0, 100.0,1.5, 1.0, 1.5, 0.004, 0.1. 0.3, 0.2025, 0.1   
+** 
+** STEP: Tension
+** 
+*Step, name=Tension, nlgeom=NO, inc=20
+*Static, direct
+0.1, 1., 
+** 
+*BOUNDARY
+**In the next line the set bottom is rectricted with displaceent 0 in the direction 2 (2,2) if it woukd be in other direction then
+** there would be a couple o number not repeated. It is a displacement = 0 since there is not a value, in other case the
+** quantity is specified (also it is allowed to specify explicitly 0) 
+LEFTSIDE,2,2
+**In the next line the set bottom is rectricted in the direction 1 (1,1)
+BACK,1,1,0.0
+BOTTOM,3,3,0.0
+** Name: Tension_node2 Type: Displacement/Rotation
+*Boundary
+RIGHTSIDE, 2, 2, 1.0
+FRONT,1,1,1.0
+TOP,3,3,1.0
+ 
+** RESTART: Save and reuse data and analysis results, This option is used to control the writing and reading of restart data
+** WRITE: Include this parameter to specify that restart data are to be written during the analysis
+**Optional parameter when you use written
+**NUMBER INTERVAL: Set this parameter equal to the number of intervals during the step at which the *RESTART data are to be written
+** TIME MARKS=YES (default) to write results at the exact times dictated by the NUMBER INTERVAL parameter
+**TIME MARKS=NO to write the restart at the increment ending immediately after the time dictated by the NUMBER INTERVAL parameter
+**When used with the NUMBER INTERVAL parameter in a co-simulation, the TIME MARKS parameter is always set to NO to write restart 
+**information at the co-simulation target time after the time dictated by the NUMBER INTERVAL parameter.
+*RESTART,WRITE,NUMBER INTERVAL=2, TIMEMARKS=NO
+*END STEP 

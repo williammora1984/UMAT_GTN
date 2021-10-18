@@ -37,4 +37,26 @@ gfortran tensor_ope_module.for material_law_GTN.for test_isochoric_tension.for -
 
 figures_test_MatLaw.py
 
+6.10.2021
+Upload of unit tests and first version of input files to meake the UMAT integration test
+
+The unit test were done using the package PFunit, to run the test without installation of PFunit use the executable file. See more information on the documentation and readme file of this folder. 
+
+The Unit test folder /1_Test_tensor_op contains 
+my_test_tensor_op1 :executable file
+
+test_tensor_mod.pf: file to specify the testing
+
+build_with_cmake_and_run.x
+
+CMakeLists.txt
+
+tensor_ope_module.for: module tested
+
+generate_values_test.py: file that generate some of the referece values.
+
+data_TT01.csv,...,data_TT09.csv: 9 files with data to test the different tensor operations
  
+The integration test folder /2_Test_Abaqus_input_files contains that defines the geometries, type of elements, restriction steps to make the tension test and hidrostatic in single elements.  In this commit are uploaded the following files
+
+test_ht_vol.inp, test_uni_tens_pla_strain.inp, test_uni_tens_pla_strain_rot90.inp, test_uni_tens_pla_stress.inp
