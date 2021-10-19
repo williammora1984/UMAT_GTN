@@ -7,7 +7,7 @@ c face that calls the material subroutine kGTN based on the on the
 c algorithm proposed by N.Aravas and Z.L.Zhang
 c     
 c-----------------------------------------------------------------------
-c Version 0.9.1
+c Version 0.9.2
 c coded by: W. Mora Oct 2021
 c-----------------------------------------------------------------------
 
@@ -31,14 +31,13 @@ c                      NPROPS = 13
 c======================================================================
 c                    Standard declaration UMAT
 c=======================================================================
-
       SUBROUTINE umat_GTN_W(stress,statev,ddsdde,sse,spd,scd,
      &  rpl,ddsddt,drplde,drpldt,
      &  stran,dstran,time,dtime,temp,dtemp,predef,dpred,cmname,
      &  ndi,nshr,ntens,nstatv,props,nprops,coords,drot,pnewdt,
      &  celent,dfgrd0,dfgrd1,noel,npt,layer,kspt,kstep,kinc)
 
-       INCLUDE 'ABA_PARAM.INC'
+c       INCLUDE 'ABA_PARAM.INC'
 
 c======================================================================
 c                    Standard variables UMAT
@@ -49,7 +48,7 @@ c=======================================================================
      &  layer, kspt, kstep, kinc
        double precision:: dtime,temp,dtemp,pnewdt,celent,sse,spd,scd
      &  ,rpl,drpldt
-     &  double precision:: stress(ntens),statev(nstatv),
+       double precision:: stress(ntens),statev(nstatv),
      &  ddsdde(ntens,ntens),ddsddt(ntens),drplde(ntens),
      &  stran(ntens),dstran(ntens),time(2),predef(1),dpred(1),
      &  props(nprops),coords(3),drot(3,3),dfgrd0(3,3),dfgrd1(3,3)
@@ -58,18 +57,25 @@ c======================================================================
 c              Additional variables used in this UMAT file
 c=======================================================================       
 
-      double precision ::sdv(21)
-      integer :: ttype 
+      double precision ::sdv(21),epspr(ntens), epser(ntens)
+      integer :: ttype, options(3) 
       double precision ::sdvup(21)
        
 c      sdv   : internal state variables input to material routine
-c      ttype : type of tangent stiffnes 
+c      options(1) : type of tangent stiffnes 
 c              0: analytical 
 c              1: numerical
+c      options(2): stress_case
+c              0: 3D 
+c              1: Plane stress
+c      options(3): Material law
+c              0: Von Mises
+c              1: GTN
+
 c      sdvup : updated internal state varialbes in the material routine
-       ntens  = 6 
-       nprops = 13
-       nstatv = 3
+       !ntens  = 6 
+       !nprops = 13
+       !nstatv = 3
 c MATERIAL PARAMETERS
 
 c       props(1)   ! : 210.0e3            ! xE
@@ -95,18 +101,20 @@ c       statev(20)     : void fraction
 c       statev(21)     : Microstrain eps_b  
 
 c Get the updated rotated strain
-       CALL ROTSIG(STATEV(1+NTENS),DROT,EPLAS,2,NDI,NSHR)
-       CALL ROTSIG(STATEV(1), DROT,EET, 2,NDI,NSHR)
+c       CALL ROTSIG(STATEV(1+NTENS),DROT,epspr,2,NDI,NSHR)
+c       CALL ROTSIG(STATEV(1), DROT,epser, 2,NDI,NSHR)
        
-       sdv        = statev(1:21)
-       sdv(1:6)   = EPLAS
-       sdv(14:19) = EET
-       ttype=0
+       sdv(1:21)  = statev(1:21)
+       sdv(1:6)   = epspr
+       sdv(14:19) = 0
+       options(1) = 0
+       options(2) = 0
+       options(3) = 0
 
-        call kGTN (STRAN+DSTRAN,DSTRAN,sdv,ttype, props, stress, ddsdde, 
-     &         sdvup)
+c        call kGTN (STRAN+DSTRAN,DSTRAN,sdv,options, props, stress,  
+c     &         ddsdde, sdvup)
 
-       sdvl=sdvup
+       statev=sdvup
        END SUBROUTINE umat_GTN_W
        
    

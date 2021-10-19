@@ -1,15 +1,7 @@
-c=======================================================================  
+c==================================================================  
 c subroutine GTN : Material model according to GURSON, TVERGAARD AND 
 c NEEDLEMAN (GTN) DAMAGE MODEL  
-c-----------------------------------------------------------------------
-c  This subroutine implement the nmerical solution for the GURSON, 
-c TVERGAARD AND NEEDLEMAN (GTN) DAMAGE MODEL according to the N.Aravas
-c  article.
-c-----------------------------------------------------------------------
-c Version 0.9.2
-c Oct 2021
-c-----------------------------------------------------------------------
-
+c------------------------------------------------------------------]
 c Inputs
 c   eps6 :epsilon ( current total strain in the form of a vector, latter
 c         is trasformed to matrix form, the vector comes from the history
@@ -33,14 +25,13 @@ c Outputs
 
 c   sig6: sigma_n+1 (stress at n+1 as a vector)
 c   A66: algritmic tangent stiffness (ATS) tensor(4 grade tensor as a 6x6 matrix)
-c   sdvup: Updated Internal state variables (the updated 3 ISV of the sdvl input vector)
-
+c   sdvup: Updated Internal state variables (the updated 3 ISV of the sdvl input vector)   
 c==================================================================
 
 
       subroutine kGTN (eps6,D_eps6,sdvl,options,inputmat,sig6,A66,sdvup)
        !eps,epsn,epsen
-c       INCLUDE 'ABA_PARAM.INC'       
+       INCLUDE 'ABA_PARAM.INC'       
         use tensor_operations
 
         implicit none
@@ -80,7 +71,7 @@ c     General
         double precision :: tol =1e-8
         integer, dimension (6) :: ii = (/1,2,3,1,2,1/) !Auxiliar iterators
         integer, dimension (6) :: jj = (/1,2,3,2,3,3/) !Auxiliar iterators
-        integer ::i, j, ATStype, Mat_L, str_case, rec !Iterators and selectors
+        integer ::i, j, ttype, Mat_L, str_case !Iterators and selectors
         integer, dimension (3) :: options
         double precision, dimension (3,3):: xid !Identity
         
@@ -89,8 +80,7 @@ c  Especific variables according to the article N. ARAVAS, 1987
        double precision, dimension (3,3) :: D_eps3
 c        s_ve_33
        double precision ::D_eps_p, D_eps_q  !p: hydrotatyx stress and equivalent stress
-       double precision:: dg_dp, dg_dq, d2g_d2p, d2g_d2q, d2g_dpdq 
-
+       double precision:: dg_dp, dg_dq, d2g_d2p, d2g_d2q, d2g_dpdq     
         
         !matp = inputmat
         xE         = inputmat(1)  !Young's modulus    
@@ -145,12 +135,7 @@ c Void volume fraction
         fn  = sdvl(20)
 c microscopic equivalent plastic strain
         epsp_b_n= sdvl(21)
-c Options
-        ATStype=options(1) !type of tangent stiffnes computation
-        str_case=options(2) !stress_case
-        Mat_L=options(3) !Material law
-
-        !Fill the identity and deviatoriser tensor               
+!Fill the identity and deviatoriser tensor               
         call Ident1(xid,3)
         call P4sym(P4sym_r)
         sig_0=200.00
@@ -160,7 +145,7 @@ c Options
         !print*,"Balphan before trial func", Balphan
         if (Mat_L==0) then
               call trial_step (eps,epspn,xmu,xHk,Balphan,alphan,xhi,
-     &                   xsigy0, phitr, dsigtr, ntr, nxitr)       
+     $                   xsigy0, phitr, dsigtr, ntr, nxitr)       
         else
               call trial_step_GTN (eps,epsn,epsen,xmu,xk,phitr, sig_0,
      &               ntr,q1,q2,q3,fn,dsigtr,sigtr, q_tr,p_tr)
@@ -185,7 +170,7 @@ c      Evalate if it is required a elastic or elastic-plastic step
             f=fn
             epsp_b=epsp_b_n
             print*, "into 2"
-            if (ATStype==0) then
+            if (ttype==0) then
               Cdev=2.0*xmu*P4sym_r
               
             endif
@@ -200,20 +185,17 @@ c          Mat_L=0 : VM, Mat_L=1 : GTN
               
               call plas_corre_VM (phitr, xmu, xHk, xhi,dsig, dsigtr,ntr,
      &           epsp, epspn, Balpha, Balphan, alpha, alphan)
-              if (ATStype==0) then
+              if (ttype==0) then
                 Cdev=2.0*xmu*beta1*P4sym_r
      &                  -2.0*xmu*beta2*diadic_prod_T2_T2(ntr,ntr)
               end if
              
            else
-              !str_case=options(2)
+              str_case=options(2)
               !print*, "q_tr", q_tr,"p_tr", p_tr, "fn", fn
-c             call plas_corre_GTN (q_tr,p_tr, sigtr,inputmat,fn, dsigtr,
-c     &       phitr, epsp_b,eps, D_eps, epsp, epse, Balpha, alpha,sig_0
-c     &       ,sig,dsig,f, ATStype, str_case)
              call plas_corre_GTN (q_tr,p_tr, sigtr,inputmat,fn, dsigtr,
      &       phitr, epsp_b,eps, D_eps, epsp, epse, Balpha, alpha,sig_0
-     &       ,sig,dsig,f, ATStype, str_case, epspn, epsp_b_n)            
+     &       ,sig,dsig,f,str_case)            
            end if
         end if
         if (Mat_L==0) then
@@ -229,7 +211,8 @@ c=================================================================
 c         Analitical solution stiffness tensor
 c=============================================================
 
-        if (ATStype==0) then
+         ttype=options(1)
+        if (ttype==0) then
            
            C=Cdev+xk*diadic_prod_T2_T2(xid,xid)
 
@@ -291,14 +274,11 @@ c   phitr : trial yield function
 c   dsigtr : deviatoric part of the trial stress tensor
 c   ntr : flow direction from trial state
 c   nxitr : norm of xitr
-c------------------------------------------------------------------------
-c coded by: W. Mora Sep 2021
-c======================================================================= 
-
+c==================================================================
 
       subroutine trial_step (eps,epspn,xmu,xHk,Balphan,alphan,xhi,
      $       xsigy0, phitr, dsigtr, ntr, nxitr)
-c       INCLUDE 'ABA_PARAM.INC'       
+       INCLUDE 'ABA_PARAM.INC'       
        use tensor_operations
        
        implicit none
@@ -354,14 +334,13 @@ c   xk : Bulk moduli
 c   phitr : trial yield function 
 c   sig_0 : equivalent tensile flow stress
 c   ntr : normalized flow direction from trial state (according to article)
-c------------------------------------------------------------------------
-c coded by: W. Mora Sep 2021
-c======================================================================= 
+c=======================================================================
 
       subroutine trial_step_GTN (eps,epsn,epsen,xmu,xk,phitr, sig_0,
      $     n_a_tr,q1,q2,q3,f,dsig_tr,sig_e_tr, q_tr,p_tr)
-c           INCLUDE 'ABA_PARAM.INC'
+           INCLUDE 'ABA_PARAM.INC'
            use tensor_operations
+           
            implicit none
            double precision, dimension (3,3) :: eps, epsn, xid,deps,  
      $                                dsigtr,sig_e_tr, sig_test 
@@ -413,10 +392,7 @@ c=======================================================================
 c subroutine plas_corre_VM (phitr, xmu, xHk, xhi,dsig, dsigtr,ntr,
 c       epsp, epspn, Balpha, Balphan, alpha, alphan)
 c=======================================================================
-c
-c------------------------------------------------------------------------
-c coded by: W. Mora Sep 2021
-c======================================================================= 
+
 
       subroutine plas_corre_VM (phitr, xmu, xHk, xhi,dsig, dsigtr,ntr,
      &  epsp, epspn, Balpha, Balphan, alpha, alphan)
@@ -462,17 +438,12 @@ c   PHI : yield suface trial
 c-----------------------------------------------------------------------
 c Outputs
 c   phitr : 
-c------------------------------------------------------------------------
-c coded by: W. Mora Oct 2021
-c======================================================================= 
+c=======================================================================
 
-c      subroutine plas_corre_GTN (q,p, sig,inputmat,f, dsig,phi, 
-c     &      epsp_b,eps,D_eps, epsp, epse, Balpha, alpha, sig_0, sig1,
-c     &      dsig1,f1,ATStype, str_case)
       subroutine plas_corre_GTN (q,p, sig,inputmat,f, dsig,phi, 
      &      epsp_b,eps,D_eps, epsp, epse, Balpha, alpha, sig_0, sig1,
-     &      dsig1,f1,ATStype, str_case, epspn, epsp_b_n)
-c            INCLUDE 'ABA_PARAM.INC'            
+     &      dsig1,f1, str_case)
+            INCLUDE 'ABA_PARAM.INC'            
             use tensor_operations
             implicit none
 c  Especific variables according to the article N. ARAVAS, 1987
@@ -490,8 +461,8 @@ c  Especific variables according to the article N. ARAVAS, 1987
      &       dsig_e, D_eps
             !Current value of ISV
             double precision :: epsp_b, alpha, alphan  ! microscopic equivalent plastic strain
-            double precision, dimension (3,3) ::sig ,epsp, eps, epsn, 
-     &            eps_pp, epse, n_a, sign_l, Balpha, Balphan, sig1,dsig1
+            double precision, dimension (3,3) ::sig ,epsp, eps, epse,
+     &                 n_a, sign_l, Balpha, Balphan, sig1,dsig1
             !derivates defined in article of real type
             double precision:: dg_dp, dg_dq, d2g_d2p, d2g_d2q, d2g_dpdq,
      &        d2g_dpdf, d2g_dqdf, d2g_dq_d_epsp,
@@ -508,8 +479,8 @@ c  Especific variables according to the article N. ARAVAS, 1987
      &        dDf_d_epsp_b, dDf_df,dDepsp_b_d_epsp_b, NU
             !derivates defined in article of tensorial (3,3) type
             double precision, dimension (3,3) ::  dDepsp_dDeps_p, 
-     &         dDepsp_dp,d_epsp_dDeps_p, dDepsp_dDeps_q, dDepsp_dq,
-     &          d_epsp_dDeps_q, dPHI_d_epsp
+     &         dDepsp_dp,d_epsp_dDeps_p
+     &         dDepsp_dDeps_q, dDepsp_dq, d_epsp_dDeps_q, dPHI_d_epsp
             double precision, dimension (3,3,1) :: dou_sum1_P2, 
      &       dou_sum2_P2 
             !Secondary derivatives and variables
@@ -524,32 +495,27 @@ c  Especific variables according to the article N. ARAVAS, 1987
             !Parameters nucleation
             double precision :: f_0, f_n, s_n, f_f, E_n ! E_n: mean value Parameter used in the nucleation equations
             !Auxiliar variables
-            double precision, dimension (3,3) ::  xid, Delta_sig66
+            double precision, dimension (3,3) ::  xid
             double precision :: pi, tol_conv_cor,conv_D_eps_p,
-     &          conv_D_eps_q, pert, con
+     &          conv_D_eps_q
             double precision, dimension(2,2) :: M, M_inv
-            double precision, dimension(2) :: b_v, c_corr, dD_eps_pq
-            double precision, dimension(6) :: eps6_pp, Delta_sig6,ii,jj
+            double precision, dimension(2) :: b_v, c_corr, dD_eps_pq 
             double precision, dimension(3,3,3,3)::C, Cdev, C_e, C_e_inv,
      &           M_4T, ATS, dn_d_sig, I4sym_r,I4dikdjl_r,I4dildjk_r
-            integer :: iterartion, i,j, ATStype, str_case   
-            double precision :: Beta1, Beta2, tol
+            integer :: iterartion, i, str_case  
 
 c      Variables for plane stress elastoplastic equations  
 c           
             double precision ::A23_PS, A31_PS, A32_PS, A33_PS, b3_PS,
      &         A13_PS, D_eps3, dev_e_33, dq_dDeps3, pe, D_eps3n,
-     &         conv_d_eps3, ome31, ome32, ome33
+     &         conv_d_eps3
             double precision, dimension(3,3) :: M_ps, M_ps_inv,D_eps_b,
-     &          dD_eps_b, depse, se, a, da, ATS_PS
+     &          dD_eps_b, depse, se, a, da
             double precision, dimension(3) :: b_ps_v, c_corr_ps
             
             !Auxiliar variables
             double precision::conv_D_eps_p_ps, conv_D_eps_q_ps,D_eps11,
      &           D_eps22
-            double precision, dimension (3,3) :: sigtr, dsigtr, epsen, 
-     &       epspn, ntr
-            double precision:: epsp_b_n, fn, phitr
              !print*, "q", q,"p", p, "poro",f
              !print*, "stress",sig
              !print*, "mat prop",inputmat
@@ -584,6 +550,9 @@ c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             call Ident1(xid,3)
             pi=4.D0*DATAN(1.D0)
             tol_conv_cor=1e-15
+
+
+          !str_case=0
 
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++            
 c Initial values to start iteration
@@ -1007,14 +976,10 @@ c            print*, "sig aft", sig
 
          !end if
 
-         if (ATStype==0) then
-c=======================================================================
-c          Compute Material tangent stiffness "analitical" solution
-c=======================================================================
-c-----------------------------------------------------------------------
-c          THREE DIMENSIONAL GEOMETRIES
-c-----------------------------------------------------------------------
 
+c=======================================================================
+c                 Compute Material tangent stiffness
+c=======================================================================
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 c  Additional derivatives 
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1082,7 +1047,7 @@ c     &       A11_D=dg_dq+dou_sum1_P1*dou_sum1_P2
      &         dPHI_d_epsp_b*(c_epsp_b_f*df_dq
      &         +c_epsp_b_epsp_b*d_epsp_b_dq)
            B22_D=-(dPHI_dq+dou_sum8)
-              
+
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 c  Solution of LSE to find patial(D_eps_p) and partial(D_eps_q)
 c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1118,82 +1083,7 @@ c+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
        C_e=2.0*xmu*I4dikdjl_r-(xk-2.0/3.0*xmu)*I4dildjk_r
        call invT4(C_e,C_e_inv)
        call invT4(M_4T+C_e_inv,ATS)
-
-c         else
-cc=======================================================================
-cc                     Numerical stiffness tangent
-cc=======================================================================
-c
-c       eps6_pp =(/eps(1,1),   eps(2,2),   eps(3,3),
-c     &          2.0*eps(1,2), 2.0*eps(2,3), 2.0*eps(1,3)/)
-c       pert=0.0001 !perturbation to compute numerical stiffness tangent 
-c       epsn=eps-D_eps       
-c       do i=1,6 !Independent coefficiente strain tensor
-c         con=2.0     
-c       eps = reshape((/eps6_pp(1), eps6_pp(4)/con, eps6_pp(6)/con,
-c     &             eps6_pp(4)/con, eps6_pp(2),     eps6_pp(5)/con,
-c     &             eps6_pp(6)/con, eps6_pp(5)/con, eps6_pp(3)/),
-c     &             shape(eps), order=(/2,1/))
-cc TRIAL STEP
-c             call trial_step_GTN (eps,epsn,epsen,xmu,xk,phitr, sig_0,
-c     &               ntr,q1,q2,q3,fn,dsigtr,sigtr, q_tr,p_tr)
-cc      Evalate if it is required a elastic or elastic-plastic step
-c            if (phitr<tol) then  !Tol is a number very close to zero
-c                !print*, "elastic"
-c                sig=sigtr
-c                dsig=dsigtr
-c                Beta1=1.0   !<--------------------Review how affect these constants in the output vectors
-c                Beta2=1.0
-c                Balpha=Balphan
-c                alpha=alphan
-c                epsp=epspn
-c                epse=eps
-c                !epse=epsen+(eps-epsn) !<<<-----------Change to implement
-c                f=fn
-c                epsp_b=epsp_b_n
-c                print*, "into 2"
-c                !if (ttype==0) then
-c                !  Cdev=2.0*xmu*P4sym_r   
-c                !endif
-c                
-c            else ! (plastic correction)
-c              rec=1
-c              if (rec .let. 1) then
-c              rec=2
-c             call plas_corre_GTN (rec,q_tr,p_tr, sigtr,inputmat,f, 
-c     &        dsigtr,phitr, epsp_b,eps, D_eps, epsp, epse, Balpha,alpha,
-c     &        sig_0,sig,dsig,f, ATStype, str_case,epspn, epsp_b_n)
-c              end if    
-c            end if
-c            Delta_sig66=sig-sig_0  !<-----------------------Review that this sig_0 correspond to the previous step
-cc  restore stress tensor as vector
-c            ii = (/1,2,3,1,2,1/) 
-c            jj = (/1,2,3,2,3,3/)
-c            do j=1,6
-c              sig6_pp(j) = sig_pp(ii(j),jj(j))
-c              Delta_sig6(j) = Delta_sig66(ii(j),jj(j))
-c            end do
-c            do j=1,6
-c              ATS(j,i)=Delta_sig6(j)/pert
-c            end do
-c       end do
-       end if
-
-c-----------------------------------------------------------------------
-c                       PLAIN STRESS CASE
-c-----------------------------------------------------------------------
-       ome31=-ATS(3,3,3,1)/ATS(3,3,3,3)  
-       ome32= ATS(3,3,3,1)/ATS(3,3,3,3)  
-       ome33= ATS(3,3,3,1)/ATS(3,3,3,3) 
-      ATS_PS= reshape((/ ATS(1,1,1,1)+ome31*ATS(1,1,3,3), 
-     & ATS(1,1,2,2)+ome32*ATS(1,1,3,3), ATS(1,1,1,2)+ome33*ATS(1,1,3,3),
-     & ATS(2,2,1,1)+ome31*ATS(2,2,3,3),
-     & ATS(2,2,2,2)+ome32*ATS(2,2,3,3), ATS(2,2,1,2)+ome33*ATS(2,2,3,3),
-     & ATS(1,2,1,1)+ome31*ATS(1,2,3,3), 
-     & ATS(1,2,2,2)+ome32*ATS(1,2,3,3), ATS(1,2,1,2)+ome33*ATS(1,2,3,3)
-     & /),shape(ATS_PS), order=(/2,1/))
-
-
+           
       end subroutine plas_corre_GTN
 
-         
+      

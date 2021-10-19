@@ -13,6 +13,7 @@
         integer :: n_step !number of steps
         integer,dimension(5) :: posi_last_time=(/2,3,3,4,7/)
         integer :: i !iterators
+        integer, dimension(3):: options
         double precision, dimension (7) :: t !Time range
         double precision :: dt!step size for strain ramp
         double precision, dimension (3) :: lam ! Strain range
@@ -48,6 +49,10 @@ c    Define material parameters
         kappa    = xE/(3.0*(1.0-2.0*xnu))
         q_el     =-0.5*(kappa-2.0/3.0*mu)/(kappa+1.0/3.0*mu)
 
+        options(1) = 0 ! ATS selectror 
+        options(2) = 0 ! Stress Case
+        options(3) = 1 ! Material Law
+
 c     define loading
 c     1: linear ramping of load
         ltype=1
@@ -56,7 +61,7 @@ c     1: linear ramping of load
         if (ltype==1) then 
             t(1:2)=(/0.0, 10.0/) ! 10
 c            %This is like a load which is related with sigma_y0 and an integer n_ampl 
-            lam(1:2)=(/te_n1 , (n_ampl*sigma_y0/2/mu)/3.0 /) !total Strain considering the value of mu to onvert from load to strain
+            lam(1:2)=(/te_n1 , (n_ampl*sigma_y0/2/mu)/1.0 /) !3.0 !total Strain considering the value of mu to onvert from load to strain
         elseif (ltype==2) then
             t(1:3)=(/0.0, 5.0, 10.0/)
             lam(1:2)=(/0.0, 1.59155e-3/3.1 /)
@@ -128,7 +133,8 @@ c        Latter is trasformed to matrix form
 c        ttype: flag for the tangent moduli 
 c               ttype = 0, Analitical tangent moduli computation
 c               ttype = 1, numerical tangent moduli computation 
-         call kGTN (e6,De6,sdv(:,i),ttype, mat_param, sigma, A66, sdvup)
+         call kGTN (e6,De6,sdv(:,i),options, mat_param, sigma, A66, 
+     &        sdvup)
          !print*,"readed",sdv(:,i)       
          !call VM (e6,sdv(:,i),ttype, mat_param, sigma, A66, sdvup)
          !print*,"Algrorithmic tangent"

@@ -5,11 +5,11 @@ c  This module contains all the operations required to do tensor operations,
 c  map into equivalent notations of tensor. print in a sorted way in the
 c termianl, and auxiliary functions used in testing of the material routine.  
 c-----------------------------------------------------------------------
-c Version 0.9.3
+c Version 0.9.2
 c Oct 2021
 c-----------------------------------------------------------------------
       module tensor_operations
-c       INCLUDE 'ABA_PARAM.INC'        
+       INCLUDE 'ABA_PARAM.INC'        
         implicit none
       contains
 
@@ -17,22 +17,20 @@ c=======================================================================
 c                    subroutine linespace
 c=======================================================================
 c=======================================================================  
-c subroutine linespace(ini, end, vector, type): returns  a  1st order  
-C tensor with even spaced double precision numbers according to the size
-c of vector  
+c subroutine linespace(ini, end, vector): returns  a  1st order tensor with 
+C even spaced double precision numbers according to the size of vector 
 c-----------------------------------------------------------------------
 c Inputs
 c   ini: initial value 
 c   end: end value
 c   vector: 1st order tensor with the right size to store the result
 c   type: select if incluedes lower end
-c       type= 0: not include lower end
+c       type= 0: not include loweer end
 c       type= 1: includes lower end
 c------------------------------------------------------------------------
 c coded by: W. Mora Sep 2021
 c=======================================================================      
       subroutine linespace (ini, end, vector, type)
-        implicit none
         double precision ::ini, end
         double precision, dimension (:) :: vector
         integer :: i, type
@@ -53,21 +51,21 @@ c                    funcion Trace
 c=======================================================================
 c=======================================================================  
 c Returns the trace of a  2nd order tensor
-c-----------------------------------------------------------------------
+c------------------------------------------------------------------]
 c Inputs
 c   array: array of size n1xn1
-c-----------------------------------------------------------------------
+c-----------------------------------------------------------------
 c Output
 c   tr_A: trace
 c------------------------------------------------------------------------
 c coded by: W. Mora Sep 2021
-c=======================================================================     
+c==================================================================      
       function Trace(A) result(Tr_A)
         implicit none
         double precision, dimension(:,:):: A
         double precision :: Tr_A
         integer n1
-        Tr_A=0.0
+        Tr_A=0
         do n1=1,size (A,1)
           Tr_A=Tr_A+A(n1,n1)
         end do
@@ -115,12 +113,10 @@ c Depends on the LAPACK Fortran package
 c http://www.netlib.org/lapack/explore-html/dd/d9a/group__double_g_ecomputational_ga0019443faea08275ca60a734d0593e60.html
 c------------------------------------------------------------------]
 cInputs
-c    A: Tensor 2D se nxn
+c    T_2D: 6x6 2nd order tensor in voigth notation
+c    T_1D: vector 6 size in voigth notation
 c------------------------------------------------------------------------
-cOutput
-c    A: inverted tensor
-c------------------------------------------------------------------------
-c coded by: W. Mora Oct 2021
+c coded by: W. Mora Sep 2021
 c===================================================================
       function inv_T_2D(A) result(Ainv)
         external:: DGETRF
@@ -157,11 +153,8 @@ c===================================================================
       end function inv_T_2D
 
 c=======================================================================  
-c                   subroutine I4dikdjl
-cc=======================================================================
-cc==================================================================  
-c Returns the 4th order unit tensor I4ikjl 
-c-----------------------------------------------------------------------c-----------------------------------------------------------------------
+c  Returns the 4th order unit tensor Iikjl
+c-----------------------------------------------------------------------
 cInputs
 c    I4dikdjl_o: 4th order tensor
 c-----------------------------------------------------------------------
@@ -191,9 +184,6 @@ c=====================================================================
          end do
       end subroutine I4dikdjl
 
-c=======================================================================  
-c                   subroutine I4dildjk
-c=======================================================================
 c=======================================================================  
 c  Returns the 4th order unit tensor Iiljk
 c-----------------------------------------------------------------------
@@ -261,6 +251,11 @@ c=====================================================================
         end do
       end subroutine I4sym
 
+
+c======================================================================+
+c                    Subroutine I4dikdjl
+c=======================================================================
+
 c======================================================================
 c                    subroutine P4sym
 c=======================================================================
@@ -289,9 +284,9 @@ c===================================================================
               do j = 1,3
                   do k = 1,3
                       do l = 1,3
-                        P4sym_o(i,j,k,l) =0.0  
-                        P4sym_o(i,j,k,l) =I4sym_o(i,j,k,l)-         
-     &                     I_3D(i,j)*I_3D(k,l)/3.000000
+                        P4sym_o(i,j,k,l) =0  
+                        P4sym_o(i,j,k,l) =I4sym_o(i,j,k,l)-1.0/3.0*         
+     &                     I_3D(i,j)*I_3D(k,l) 
                       end do
                     end do
                   end do
@@ -347,7 +342,7 @@ c===================================================================
        integer:: i, j !Iterators
        integer:: n    !dimension tensor. 
 
-        Contr =0.00000000
+        Contr =0.0
         n=size(T_2D_1,1)
 
         do i=1,n
@@ -372,7 +367,7 @@ c------------------------------------------------------------------------
 c coded by: W. Mora Sep 2021
 c===================================================================
       function diadic_prod_T2_T2(T_2D_1,T_2D_2) result(Diad)  
-        implicit none
+      
         double precision, dimension(:,:) :: T_2D_1, T_2D_2  !2nd order tensor
         double precision, dimension(size(T_2D_1,1),size(T_2D_1,1),
      &                 size(T_2D_1,1),size(T_2D_1,1)):: Diad !4th order tensor   
@@ -410,9 +405,9 @@ c------------------------------------------------------------------------
 c coded by: W. Mora Sep 2021
 c=======================================================================
       function contrac_4th_2nd(T_4th,T_2D) result(Contr)
-        implicit none
-        double precision, dimension(3,3,3,3):: T_4th                      !2nd order tensor
-        double precision, dimension(size(T_4th,3),size(T_4th,4)) ::T_2D
+
+        double precision, dimension(:,:,:,:):: T_4th                      !2nd order tensor
+        double precision, dimension(size(T_4th,3),size(T_4th,4)) :: T_2D
      $   , Contr                                                          !4th order tensor
         integer:: i, j, k, l 
         integer:: n  !size dimension tensor
@@ -421,9 +416,9 @@ c=======================================================================
         do i=1,3
             do j=1,3
                 do k=1,3
-                    do l=1,3  
-                      !Contr(j,i) =Contr(j,i)+T_4th(j,i,l,k)*T_2D(l,k)
-                      Contr(i,j)= Contr(i,j)+T_4th(i,j,k,l)*T_2D(k,l)
+                    do l=1,3
+                      Contr(i,j)=0  
+                      Contr(j,i) =T_4th(j,i,l,k)*T_2D(l,k)
                     end do
                   end do
                 end do
@@ -455,7 +450,7 @@ c===================================================================
        double precision, dimension(3,3,3,3)::tensor_4th !4th order
        double precision:: sq2, tem_n1, tem_n2           !Auxiliary scalars
        
-       sq2 =2.00000**0.5
+       sq2 =2.00**0.5
        tem_n1=1.0
        tem_n2=2.0
 
@@ -510,33 +505,32 @@ c===================================================================
         integer:: n1,n2,elements                           !dimension matrix
         double precision, dimension(3,3,3,3)::tensor_4th   !4nd order tensor
         double precision, dimension(6,6)::Vn_2D            !2nd order tensor 
-        double precision:: sq2,const1                      !Auxiliary scalar
+        double precision:: sq2                             !Auxiliary scalar
 
-        sq2 =2.000000**0.5
-        const1=2.000000
+        sq2 =2.0**0.5
         elements=size(tensor_4th)
         n1=size(tensor_4th,1)
         n2=size(tensor_4th,2)
           if (elements .eq. 81) then         
            Vn_2D=reshape( (  
-     &               /tensor_4th(1,1,1,1),         tensor_4th(1,1,2,2),     
-     &                tensor_4th(1,1,3,3),     sq2*tensor_4th(1,1,1,2), 
-     &            sq2*tensor_4th(1,1,2,3),     sq2*tensor_4th(1,1,1,3),
-     &                tensor_4th(2,2,1,1),         tensor_4th(2,2,2,2),     
-     &                tensor_4th(2,2,3,3),     sq2*tensor_4th(2,2,1,2), 
-     &            sq2*tensor_4th(2,2,2,3),     sq2*tensor_4th(2,2,1,3),
-     &                tensor_4th(3,3,1,1),         tensor_4th(3,3,2,2),
-     &                tensor_4th(3,3,3,3),     sq2*tensor_4th(3,3,1,2), 
-     &            sq2*tensor_4th(3,3,2,3),     sq2*tensor_4th(3,3,1,3),
-     &            sq2*tensor_4th(1,2,1,1),     sq2*tensor_4th(1,2,2,2), 
-     &            sq2*tensor_4th(1,2,3,3),  const1*tensor_4th(1,2,1,2),
-     &              2*tensor_4th(1,2,2,3),  const1*tensor_4th(1,2,1,3),
-     &            sq2*tensor_4th(2,3,1,1),     sq2*tensor_4th(2,3,2,2), 
-     &            sq2*tensor_4th(2,3,3,3),  const1*tensor_4th(2,3,1,2),   
-     &         const1*tensor_4th(2,3,2,3),  const1*tensor_4th(2,3,1,3),
-     &            sq2*tensor_4th(1,3,1,1),     sq2*tensor_4th(1,3,2,2), 
-     &            sq2*tensor_4th(1,3,3,3),  const1*tensor_4th(1,3,1,2), 
-     &         const1*tensor_4th(1,3,2,3), const1*tensor_4th(1,3,1,3)/),
+     &               /tensor_4th(1,1,1,1),     tensor_4th(1,1,2,2),     
+     &                tensor_4th(1,1,3,3), sq2*tensor_4th(1,1,1,2), 
+     &            sq2*tensor_4th(1,1,2,3), sq2*tensor_4th(1,1,1,3),
+     &                tensor_4th(2,2,1,1),     tensor_4th(2,2,2,2),     
+     &                tensor_4th(2,2,3,3), sq2*tensor_4th(2,2,1,2), 
+     &            sq2*tensor_4th(2,2,2,3), sq2*tensor_4th(2,2,1,3),
+     &                tensor_4th(3,3,1,1),     tensor_4th(3,3,2,2),
+     &                tensor_4th(3,3,3,3), sq2*tensor_4th(3,3,1,2), 
+     &            sq2*tensor_4th(3,3,2,3), sq2*tensor_4th(3,3,1,3),
+     &            sq2*tensor_4th(1,2,1,1), sq2*tensor_4th(1,2,2,2), 
+     &            sq2*tensor_4th(1,2,3,3),   2*tensor_4th(1,2,1,2),
+     &              2*tensor_4th(1,2,2,3),   2*tensor_4th(1,2,1,3),
+     &            sq2*tensor_4th(2,3,1,1), sq2*tensor_4th(2,3,2,2), 
+     &            sq2*tensor_4th(2,3,3,3),   2*tensor_4th(2,3,1,2),   
+     &              2*tensor_4th(2,3,2,3),   2*tensor_4th(2,3,1,3),
+     &            sq2*tensor_4th(1,3,1,1), sq2*tensor_4th(1,3,2,2), 
+     &            sq2*tensor_4th(1,3,3,3),   2*tensor_4th(1,3,1,2), 
+     &              2*tensor_4th(1,3,2,3),   2*tensor_4th(1,3,1,3)/),
      &          shape(Vn_2D), order=(/2,1/) )
 
           end if
@@ -752,95 +746,95 @@ c==================================================================
         end if
       end subroutine loading2
 
-cc======================================================================
-cc                    function partition_1D
-cc=======================================================================
-cc==================================================================  
-cc function partition_1D (T_1D)
-cc------------------------------------------------------------------]
-cc Inputs
-cc   T_1D: 1st order tensor  dimension 1x6
-cc-----------------------------------------------------------------
-cc Outputs
-cc   T_1D_Par: 1st order tensor  dimension 1x5
-cc------------------------------------------------------------------------
-cc coded by: W. Mora Sep 2021
-cc==================================================================
-c      function partition_1D(T_1D) result(T_1D_Par)
-c
-c        implicit none
-c        double precision, dimension (6) ::T_1D
-c        double precision, dimension (5) ::T_1D_Par
-c        
-c        if (size(T_1D)==6) then
-c            T_1D_Par=T_1D(2:) 
-c        end if
-c      end function partition_1D
-c
-cc=======================================================================
-cc                 function partition_2D_1D
-cc=======================================================================
-cc=======================================================================  
-cc returns a vecotr notation of a 3x3 simmetric 2nd order tensor without
-cc  the element 1,1.
-cc-----------------------------------------------------------------------
-cc Inputs
-cc   T_1D : 2 order symmetric tensor  
-cc-----------------------------------------------------------------------
-cc Outputs
-cc   T_1D_Par : 1st order voigth notation with out element 1,1.
-cc------------------------------------------------------------------------
-cc coded by: W. Mora Sep 2021
-cc=======================================================================
-c      function partition_2D_1D(T_2D) result(T_1D_Par)
-c        implicit none
-c
-c        double precision, dimension (3,3) ::T_2D    !2nd order tensor
-c        double precision, dimension (5) ::T_1D_Par  !1st order tensor
-c        
-c        if (size(T_2D)==9) then
-c            T_1D_Par=(/T_2D(2,2), 
-c     $                 T_2D(3,3), 
-c     $                 T_2D(1,2), 
-c     $                 T_2D(2,3), 
-c     $                 T_2D(1,3)/)
-c        end if
-c
-c      end function partition_2D_1D
-c
-cc======================================================================
-cc                 function partition_2D_2D
-cc=======================================================================
-cc==================================================================  
-cc returns a 2nd order tensor of dimension 5x5 from a 2nd order tensor of
-cc dimension 6x6 without include the forst row and colum.
-cc------------------------------------------------------------------]
-cc Inputs
-cc   T_2D: 2nd order tensor 5x5  
-cc-----------------------------------------------------------------
-cc Outputs
-cc   T_2D_Par: 2nd order tensor 6x6
-cc------------------------------------------------------------------------
-cc coded by: W. Mora Sep 2021
-cc==================================================================
-c
-c      function partition_2D_2D(T_2D) result(T_2D_Par)
-c        implicit none
-c
-c        double precision, dimension (6,6) ::T_2D     !2nd order tensor
-c        double precision, dimension (5,5) ::T_2D_Par !2nd order tensor
-c
-c        if (size(T_2D)==36) then
-c          T_2D_Par=reshape(
-c     $       (/T_2D(2,2), T_2D(2,3), T_2D(2,4), T_2D(2,5), T_2D(2,6),
-c     $         T_2D(3,2), T_2D(3,3), T_2D(3,4), T_2D(3,5), T_2D(3,6),
-c     $         T_2D(4,2), T_2D(4,3), T_2D(4,4), T_2D(4,5), T_2D(4,6),
-c     $         T_2D(5,2), T_2D(5,3), T_2D(5,4), T_2D(5,5), T_2D(5,6),
-c     $         T_2D(6,2), T_2D(6,3), T_2D(6,4), T_2D(6,5), T_2D(6,6)/),
-c     $          shape(T_2D_Par),order=(/2,1/))
-c        end if
-c
-c      end function partition_2D_2D
+c======================================================================
+c                    function partition_1D
+c=======================================================================
+c==================================================================  
+c function partition_1D (T_1D)
+c------------------------------------------------------------------]
+c Inputs
+c   T_1D: 1st order tensor  dimension 1x6
+c-----------------------------------------------------------------
+c Outputs
+c   T_1D_Par: 1st order tensor  dimension 1x5
+c------------------------------------------------------------------------
+c coded by: W. Mora Sep 2021
+c==================================================================
+      function partition_1D(T_1D) result(T_1D_Par)
+
+        implicit none
+        double precision, dimension (6) ::T_1D
+        double precision, dimension (5) ::T_1D_Par
+        
+        if (size(T_1D)==6) then
+            T_1D_Par=T_1D(2:) 
+        end if
+      end function partition_1D
+
+c=======================================================================
+c                 function partition_2D_1D
+c=======================================================================
+c=======================================================================  
+c returns a vecotr notation of a 3x3 simmetric 2nd order tensor without
+c  the element 1,1.
+c-----------------------------------------------------------------------
+c Inputs
+c   T_1D : 2 order symmetric tensor  
+c-----------------------------------------------------------------------
+c Outputs
+c   T_1D_Par : 1st order voigth notation with out element 1,1.
+c------------------------------------------------------------------------
+c coded by: W. Mora Sep 2021
+c=======================================================================
+      function partition_2D_1D(T_2D) result(T_1D_Par)
+        implicit none
+
+        double precision, dimension (3,3) ::T_2D    !2nd order tensor
+        double precision, dimension (5) ::T_1D_Par  !1st order tensor
+        
+        if (size(T_2D)==9) then
+            T_1D_Par=(/T_2D(2,2), 
+     $                 T_2D(3,3), 
+     $                 T_2D(1,2), 
+     $                 T_2D(2,3), 
+     $                 T_2D(1,3)/)
+        end if
+
+      end function partition_2D_1D
+
+c======================================================================
+c                 function partition_2D_2D
+c=======================================================================
+c==================================================================  
+c returns a 2nd order tensor of dimension 5x5 from a 2nd order tensor of
+c dimension 6x6 without include the forst row and colum.
+c------------------------------------------------------------------]
+c Inputs
+c   T_2D: 2nd order tensor 5x5  
+c-----------------------------------------------------------------
+c Outputs
+c   T_2D_Par: 2nd order tensor 6x6
+c------------------------------------------------------------------------
+c coded by: W. Mora Sep 2021
+c==================================================================
+
+      function partition_2D_2D(T_2D) result(T_2D_Par)
+        implicit none
+
+        double precision, dimension (6,6) ::T_2D     !2nd order tensor
+        double precision, dimension (5,5) ::T_2D_Par !2nd order tensor
+
+        if (size(T_2D)==36) then
+          T_2D_Par=reshape(
+     $       (/T_2D(2,2), T_2D(2,3), T_2D(2,4), T_2D(2,5), T_2D(2,6),
+     $         T_2D(3,2), T_2D(3,3), T_2D(3,4), T_2D(3,5), T_2D(3,6),
+     $         T_2D(4,2), T_2D(4,3), T_2D(4,4), T_2D(4,5), T_2D(4,6),
+     $         T_2D(5,2), T_2D(5,3), T_2D(5,4), T_2D(5,5), T_2D(5,6),
+     $         T_2D(6,2), T_2D(6,3), T_2D(6,4), T_2D(6,5), T_2D(6,6)/),
+     $          shape(T_2D_Par),order=(/2,1/))
+        end if
+
+      end function partition_2D_2D
 
 c======================================================================
 c                 function Kron_d
@@ -872,101 +866,4 @@ c==================================================================
 
       end module tensor_operations 
 
-c=======================================================================
-c            SUBROUTINES TO MAKE THE TEST
-C=======================================================================      
-                
-c======================================================================
-c                 subroutine read2
-c=======================================================================
-c==================================================================  
-c Import the data form a csv file
-c------------------------------------------------------------------]
-c Inputs
-c   import1   : 2D grade tensor to store the readed information
-c   n1        : dimesion 1 of the array that contain the information
-c   n2        : dimesion 2 of the array that contain the information
-c   file_name : information source file name. (must be a csv file)
-c------------------------------------------------------------------------
-c coded by: W. Mora Oct 2021
-c==================================================================
-
-      subroutine read2(import1, n1,n2, file_name)
-          implicit none
-          integer:: i, j,end,stat,line_no,n1,n2     !iterators
-          
-          character(len=13) :: file_name
-          double precision :: import1(n1,n2)
-          n1=size(import1,1)
-          n2=size(import1,2)
-
-          open(15, file=file_name,access='sequential',
-     &      form="formatted", iostat=stat)
-          do i = 1,n1
-             read(15,*,iostat=stat) import1(i,:)
-          end do
-          close (15)
-
-      end subroutine read2
-
-c======================================================================
-c                 subroutine emp_4th
-c=======================================================================
-c==================================================================  
-c Empties a 4th grade tensor
-c------------------------------------------------------------------]
-c Inputs
-c   T_4th   : 4yh grade tensor to empty
-c------------------------------------------------------------------------
-c coded by: W. Mora Oct 2021
-c==================================================================
-
-      subroutine emp_4th(T_4th)
-        implicit none
-        double precision, dimension(3,3,3,3):: T_4th                      !2nd order tensor
-        double precision, dimension(size(T_4th,3),size(T_4th,4)) ::T_2D
-     $   , Contr                                                          !4th order tensor
-        integer:: i, j, k, l 
-        integer:: n  !size dimension tensor
-    
-        n=size(T_4th,1)
-        do i=1,3
-            do j=1,3
-                do k=1,3
-                    do l=1,3  
-                      !Contr(j,i) =Contr(j,i)+T_4th(j,i,l,k)*T_2D(l,k)
-                      T_4th= 0.000
-                    end do
-                  end do
-                end do
-              end do
-
-            end subroutine emp_4th
-
-c======================================================================
-c                 subroutine emp_2D
-c=======================================================================
-c==================================================================  
-c Empties a 2nd grade tensor
-c------------------------------------------------------------------]
-c Inputs
-c   T   : 2nd grade tensor to empty
-c------------------------------------------------------------------------
-c coded by: W. Mora Oct 2021
-c==================================================================
-
-      subroutine emp_2D(T)
-        implicit none
-        double precision, dimension(3,3):: T   !2nd order tensor
-        integer:: i, j
-        integer:: n  !size dimension tensor
-    
-        do i=1,3
-            do j=1,3
-              T= 0.000
-
-          end do
-        end do
-
-      end subroutine emp_2D
 
