@@ -1,0 +1,51 @@
+*HEADING
+ UMAT - ROUSSELIER, UNIAXIAL TENSION TEST, C3D8 --- 
+*NODE,NSET=ALLN
+1,0.,0.,0.
+2,1.,0.,0.
+3,1.,1.,0.
+4,0.,1.,0.
+5,0.,0.,1.
+6,1.,0.,1.
+7,1.,1.,1.
+8,0.,1.,1.
+*ELEMENT,TYPE=C3D8,ELSET=ALLE
+1,1,2,3,4,5,6,7,8
+*SOLID SECTION,ELSET=ALLE,MATERIAL=ALLE
+*Material, name=ALLE
+*Depvar
+     21,
+*User Material, constants=16
+210000.,   0.3,  200.,  578.,  2.62, 0.005,  566.,  0.01
+  619.,  0.02,  647.,  0.03,  673.,  0.04,  710.,  0.06
+**   
+*BOUNDARY
+1,PINNED
+2,3
+2,2
+3,3
+4,3
+4,1
+5,1
+5,2
+6,2
+8,1
+*STEP,NLGEOM,INC=100
+*STATIC,DIRECT
+1.,100.
+*BOUNDARY
+3,2,,1
+4,2,,1
+7,2,,1
+8,2,,1
+*EL PRINT
+S, 
+SINV, 
+E, 
+EE, 
+SDV, 
+*NODE PRINT
+U,RF
+*EL FILE,FREQ=10
+S,E,SDV
+*END STEP

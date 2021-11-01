@@ -24,42 +24,63 @@ def import_dataset(filename):
 #X: Strain Values
 #Y: dependent values
 X, Y= import_dataset("data1.csv")
-print (X)
-print (Y[:,0])
+
+import os
+path='1_Fig_3D'
+if not os.path.exists(path):
+    os.makedirs(path)
+
+file_name="T_Iso_Stress_strain.png"
+completeName = os.path.join(path, file_name)
 
 fig,ax=plt.subplots()
 ax.plot(X[1:],Y[1:,0],linestyle='None',marker='o',markersize=5, label="s11")
 ax.plot(X[1:],Y[1:,1],linestyle='None',marker='x',markersize=5, label="s22") 
 ax.plot(X[1:],Y[1:,2],linestyle='None',marker='.',markersize=5, label="s33")
-ax.set_ylabel("Stress")
 ax.set_xlabel("strain, e11")
-ax.legend()     
+ax.set_ylabel("Stress")
+ax.legend()
+plt.grid(True)     
 fig.suptitle("Single tension")
-fig.savefig("T_Iso_Stress_strain.png")
+fig.savefig(completeName)
 
+
+file_name="T_Iso_plastic_strain.png"
+completeName = os.path.join(path, file_name)
 
 fig,ax=plt.subplots()
 ax.plot(X[1:],Y[1:,3],linestyle='None',marker='o',markersize=5, label="epsp11")
 ax.plot(X[1:],Y[1:,4],linestyle='None',marker='x',markersize=5, label="epsp22") 
 ax.plot(X[1:],Y[1:,5],linestyle='None',marker='.',markersize=5, label="epsp33")
-ax.set_ylabel("plastic strain")
 ax.set_xlabel("Strain, e11")
-ax.legend()     
+ax.set_ylabel("plastic strain")
+ax.legend()
+plt.grid(True)  
 fig.suptitle("Plastic strain")
-fig.savefig("T_Iso_plastic_strain.png")
+fig.savefig(completeName)
+
+
+file_name="T_Iso_Porosity.png"
+completeName = os.path.join(path, file_name)
 
 fig,ax=plt.subplots()
 ax.plot(X[1:],Y[1:,6],linestyle='None',marker='o',markersize=5, label="f")
-ax.set_ylabel("porosity")
 ax.set_xlabel("Strain, e11")
-ax.legend()     
+ax.set_ylabel("porosity")
+ax.legend()
+plt.grid(True)  
 fig.suptitle("Porosity")
-fig.savefig("T_Iso_Porosity.png")
+fig.savefig(completeName)
+
+
+file_name="T_Iso_epsp_b.png"
+completeName = os.path.join(path, file_name)
 
 fig,ax=plt.subplots()
 ax.plot(X[1:],Y[1:,7],linestyle='None',marker='o',markersize=5, label="epsp_b")
+ax.set_xlabel("Strain, e11")
 ax.set_ylabel("microscopy equivalent plastic strain")
-ax.set_xlabel("microscopy equ pla strain, epsp_b")
-ax.legend()     
+ax.legend()   
+plt.grid(True)  
 fig.suptitle("microscopy equivalent plastic strain")
-fig.savefig("T_Iso_epsp_b.png")
+fig.savefig(completeName)

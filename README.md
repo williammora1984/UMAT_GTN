@@ -67,3 +67,7 @@ Implementation of plastic return and plain stress
 Update of the material routine with implementation of the plastic return, plain stress and algorithmic tangent stiffness. All the related files that had modification also are updated.
 
 Uplaoad of the folder 3_UMAT/ This folder contains the files that must be compiled for Abaqus and therefore has some little differences with respect to the files that are compiled only with gfortran.
+
+1.11.2021
+
+Last update test and subroutines
